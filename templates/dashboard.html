@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h3 class="mb-4">Welcome, {{ session.get('full_name') }} 👋</h3>
+
+{% if role in ['librarian', 'admin'] %}
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="stat-card bg-ink">
+        <div class="small">Total Titles</div>
+        <div class="fs-3 fw-bold">{{ total_books }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card bg-forest">
+        <div class="small">Total Copies</div>
+        <div class="fs-3 fw-bold">{{ total_copies }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card bg-brass">
+        <div class="small">Available Now</div>
+        <div class="fs-3 fw-bold">{{ available_copies }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card bg-stamp">
+        <div class="small">Active Loans</div>
+        <div class="fs-3 fw-bold">{{ active_loans }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <h5>Overdue Books</h5>
+      {% if overdue_loans %}
+        <table class="table table-sm bg-white">
+          <thead><tr><th>Book</th><th>Borrower</th><th>Due Date</th></tr></thead>
+          <tbody>
+          {% for loan in overdue_loans %}
+            <tr>
+              <td>{{ loan['title'] }}</td>
+              <td>{{ loan['full_name'] }}</td>
+              <td>{{ loan['due_date'] }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-muted">No overdue books. 🎉</p>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-6">
+      <h5>Recent Loan Activity</h5>
+      <table class="table table-sm bg-white">
+        <thead><tr><th>Book</th><th>Borrower</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for loan in recent_loans %}
+          <tr>
+            <td>{{ loan['title'] }}</td>
+            <td>{{ loan['full_name'] }}</td>
+            <td><span class="badge badge-{{ loan['status'] }}">{{ loan['status'] }}</span></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% else %}
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <h5>My Borrowed Books</h5>
+      {% if my_loans %}
+        <table class="table table-sm bg-white">
+          <thead><tr><th>Title</th><th>Author</th><th>Due Date</th><th>Status</th></tr></thead>
+          <tbody>
+          {% for loan in my_loans %}
+            <tr>
+              <td>{{ loan['title'] }}</td>
+              <td>{{ loan['author'] }}</td>
+              <td>{{ loan['due_date'] }}</td>
+              <td><span class="badge badge-{{ loan['status'] }}">{{ loan['status'] }}</span></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-muted">You have no books currently borrowed. <a href="{{ url_for('search') }}">Browse the catalog</a>.</p>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-5">
+      <h5>Notifications</h5>
+      {% if notifications %}
+        <ul class="list-group">
+        {% for n in notifications %}
+          <li class="list-group-item">
+            <span class="badge badge-{{ 'overdue' if n['type'] == 'overdue' else 'issued' if n['type'] == 'due_soon' else 'returned' }} me-2">
+              {{ n['type'] }}
+            </span>
+            {{ n['message'] }}
+          </li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted">No new notifications.</p>
+      {% endif %}
+    </div>
+  </div>
+
+{% endif %}
+{% endblock %}

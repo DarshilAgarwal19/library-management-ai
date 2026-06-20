@@ -1,0 +1,110 @@
+:root {
+  --ink: #1c2541;
+  --ink-light: #2c3a5c;
+  --paper: #f2efe6;
+  --brass: #b8863b;
+  --forest: #2f5d50;
+  --stamp-red: #a33b2b;
+  --charcoal: #232323;
+}
+
+body {
+  background-color: var(--paper);
+  color: var(--charcoal);
+}
+
+/* ---------- Navbar ---------- */
+.navbar-library {
+  background-color: var(--ink) !important;
+}
+.navbar-library .navbar-brand,
+.navbar-library .nav-link {
+  color: #f1ecdd !important;
+}
+.navbar-library .nav-link:hover {
+  color: var(--brass) !important;
+}
+.bg-brass {
+  background-color: var(--brass) !important;
+}
+
+/* ---------- Buttons ---------- */
+.btn-library {
+  background-color: var(--ink);
+  color: #fff;
+  border: none;
+}
+.btn-library:hover {
+  background-color: var(--ink-light);
+  color: #fff;
+}
+
+/* ---------- Cards ---------- */
+.card-book {
+  border: none;
+  border-left: 4px solid var(--brass);
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.login-card {
+  max-width: 420px;
+  margin: 80px auto;
+  border: none;
+  border-top: 6px solid var(--brass);
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* ---------- Call numbers (catalog look) ---------- */
+.call-number {
+  font-family: "Courier New", monospace;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* ---------- Status badges ---------- */
+.badge-issued {
+  background-color: var(--forest);
+}
+.badge-overdue {
+  background-color: var(--stamp-red);
+}
+.badge-returned {
+  background-color: #6c757d;
+}
+.badge-due_soon {
+  background-color: var(--brass);
+}
+.badge-new_arrival {
+  background-color: var(--forest);
+}
+.badge-general {
+  background-color: #6c757d;
+}
+
+/* ---------- Dashboard stat cards ---------- */
+.stat-card {
+  border-radius: 10px;
+  padding: 1.25rem;
+  color: #fff;
+}
+.stat-card.bg-ink {
+  background-color: var(--ink);
+}
+.stat-card.bg-forest {
+  background-color: var(--forest);
+}
+.stat-card.bg-brass {
+  background-color: var(--brass);
+}
+.stat-card.bg-stamp {
+  background-color: var(--stamp-red);
+}
+
+/* ---------- Recommendation score ---------- */
+.rec-score {
+  font-size: 0.75rem;
+  color: var(--brass);
+  font-weight: 600;
+}

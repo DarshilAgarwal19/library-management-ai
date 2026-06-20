@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Issue a Book{% endblock %}
+{% block content %}
+<h3 class="mb-4">Issue a Book</h3>
+
+<form method="POST" action="{{ url_for('issue') }}" class="card card-book p-4" style="max-width:600px;">
+  <div class="mb-3">
+    <label class="form-label">Select Book</label>
+    <select name="book_id" class="form-select" required>
+      <option value="" disabled selected>Choose a book</option>
+      {% for book in books %}
+        <option value="{{ book['book_id'] }}">{{ book['title'] }} — {{ book['author'] }} ({{ book['available_copies'] }} available)</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  {% if role in ['librarian', 'admin'] %}
+  <div class="mb-3">
+    <label class="form-label">Issue To (Student)</label>
+    <select name="user_id" class="form-select" required>
+      <option value="" disabled selected>Choose a student</option>
+      {% for s in students %}
+        <option value="{{ s['user_id'] }}">{{ s['full_name'] }} ({{ s['username'] }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% endif %}
+
+  <button type="submit" class="btn btn-library">Issue Book</button>
+</form>
+{% endblock %}

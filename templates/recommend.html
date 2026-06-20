@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Recommended for You{% endblock %}
+{% block content %}
+<h3 class="mb-1">Recommended for You</h3>
+<p class="text-muted mb-4">Based on your borrowing history, similar readers, and what's trending in the library.</p>
+
+<div class="row g-3">
+  {% for book in recommendations %}
+  <div class="col-md-4">
+    <div class="card card-book h-100">
+      <div class="card-body">
+        <h6 class="card-title fw-bold">{{ book.title }}</h6>
+        <p class="card-text mb-1 text-muted">{{ book.author }}</p>
+        <p class="call-number mb-2">{{ book.call_number }} · {{ book.category }}</p>
+        <p class="small text-muted mb-2">{{ book.reason }}</p>
+        <span class="rec-score">Match score: {{ book.score }}</span>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">No recommendations yet — borrow a few books to help the engine learn your taste.</p>
+  {% endfor %}
+</div>
+{% endblock %}

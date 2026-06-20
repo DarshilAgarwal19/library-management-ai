@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Return a Book{% endblock %}
+{% block content %}
+<h3 class="mb-4">Return a Book</h3>
+
+{% if loans %}
+<table class="table bg-white">
+  <thead>
+    <tr>
+      <th>Title</th>
+      {% if role in ['librarian', 'admin'] %}<th>Borrower</th>{% endif %}
+      <th>Due Date</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for loan in loans %}
+    <tr>
+      <td>{{ loan['title'] }}</td>
+      {% if role in ['librarian', 'admin'] %}<td>{{ loan['full_name'] }}</td>{% endif %}
+      <td>{{ loan['due_date'] }}</td>
+      <td><span class="badge badge-{{ loan['status'] }}">{{ loan['status'] }}</span></td>
+      <td>
+        <form method="POST" action="{{ url_for('return_book') }}">
+          <input type="hidden" name="borrow_id" value="{{ loan['borrow_id'] }}">
+          <button type="submit" class="btn btn-sm btn-library">Return</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="text-muted">There are no active loans to return.</p>
+{% endif %}
+{% endblock %}

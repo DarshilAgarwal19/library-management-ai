@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Login - AI Library System{% endblock %}
+{% block content %}
+<div class="card login-card shadow-sm">
+  <div class="card-body p-4">
+    <h3 class="text-center mb-1">📚 AI Library System</h3>
+    <p class="text-center text-muted mb-4">Sign in to continue</p>
+
+    <form method="POST" action="{{ url_for('login') }}">
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" required autofocus>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-library w-100">Login</button>
+    </form>
+
+    <hr>
+    <p class="text-muted small mb-1">Demo accounts:</p>
+    <ul class="small text-muted mb-0">
+      <li>Librarian — username <code>anita</code> / password <code>librarian123</code></li>
+      <li>Student — username <code>rahul</code> / password <code>student123</code></li>
+      <li>Student — username <code>priya</code> / password <code>student123</code></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
