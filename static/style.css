@@ -108,3 +108,88 @@ body {
   color: var(--brass);
   font-weight: 600;
 }
+
+/* ---------- AI Assistant widget ---------- */
+.assistant-toggle {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--ink);
+  color: #fff;
+  border: 2px solid var(--brass);
+  font-size: 1.5rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  z-index: 1050;
+  cursor: pointer;
+}
+.assistant-toggle:hover {
+  background-color: var(--ink-light);
+}
+
+.assistant-panel {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  width: 340px;
+  max-height: 460px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  z-index: 1050;
+}
+
+.assistant-header {
+  background-color: var(--ink);
+  color: #f1ecdd;
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.assistant-messages {
+  flex: 1;
+  padding: 0.75rem;
+  overflow-y: auto;
+  background-color: var(--paper);
+  min-height: 220px;
+  max-height: 320px;
+}
+
+.assistant-bubble {
+  max-width: 85%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+.assistant-bubble.bot {
+  background-color: #fff;
+  border: 1px solid #ddd6c2;
+  margin-right: auto;
+}
+.assistant-bubble.user {
+  background-color: var(--ink);
+  color: #fff;
+  margin-left: auto;
+}
+
+.assistant-input-row {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  border-top: 1px solid #eee;
+  background: #fff;
+}
+.assistant-input-row input {
+  flex: 1;
+}

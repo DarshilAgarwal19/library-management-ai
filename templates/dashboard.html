@@ -114,4 +114,92 @@
   </div>
 
 {% endif %}
+
+<!-- ===================== AI Library Assistant Widget ===================== -->
+<button id="assistantToggle" class="assistant-toggle" type="button" aria-label="Open library assistant">
+  🤖
+</button>
+
+<div id="assistantPanel" class="assistant-panel d-none">
+  <div class="assistant-header">
+    <span>📚 Library Assistant</span>
+    <button id="assistantClose" type="button" class="btn-close btn-close-white" aria-label="Close"></button>
+  </div>
+  <div id="assistantMessages" class="assistant-messages"></div>
+  <div class="assistant-input-row">
+    <input id="assistantInput" type="text" class="form-control form-control-sm"
+           placeholder="Ask about your books, returns, or get a suggestion...">
+    <button id="assistantSend" class="btn btn-sm btn-library" type="button">Send</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const toggleBtn = document.getElementById('assistantToggle');
+  const closeBtn = document.getElementById('assistantClose');
+  const panel = document.getElementById('assistantPanel');
+  const messages = document.getElementById('assistantMessages');
+  const input = document.getElementById('assistantInput');
+  const sendBtn = document.getElementById('assistantSend');
+
+  let greeted = false;
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function addMessage(text, sender) {
+    const bubble = document.createElement('div');
+    bubble.className = 'assistant-bubble ' + sender;
+    bubble.innerHTML = escapeHtml(text).replace(/\n/g, '<br>');
+    messages.appendChild(bubble);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function openPanel() {
+    panel.classList.remove('d-none');
+    if (!greeted) {
+      addMessage(
+        "Hi {{ session.get('full_name') }}! Ask me things like \"what have I borrowed\", " +
+        "\"recommend a book\", \"my return history\", or \"any fines\"?",
+        'bot'
+      );
+      greeted = true;
+    }
+    input.focus();
+  }
+
+  toggleBtn.addEventListener('click', openPanel);
+  closeBtn.addEventListener('click', () => panel.classList.add('d-none'));
+
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+    addMessage(text, 'user');
+    input.value = '';
+    sendBtn.disabled = true;
+
+    try {
+      const res = await fetch("{{ url_for('assistant') }}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await res.json();
+      addMessage(data.reply || "Sorry, I couldn't process that.", 'bot');
+    } catch (err) {
+      addMessage("Something went wrong reaching the assistant. Please try again.", 'bot');
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+})();
+</script>
 {% endblock %}

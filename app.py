@@ -11,7 +11,7 @@ import os
 from datetime import datetime, timedelta
 from functools import wraps
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash, g
+from flask import Flask, render_template, request, redirect, url_for, session, flash, g, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 
@@ -414,6 +414,123 @@ def generate_recommendations(db, user_id, top_n=6):
 
     scored.sort(key=lambda x: x["score"], reverse=True)
     return scored[:top_n]
+
+
+# ----------------------------------------------------------------------
+# Routes: Library Assistant (chat widget on the dashboard)
+# ----------------------------------------------------------------------
+@app.route("/assistant", methods=["POST"])
+@login_required
+def assistant():
+    db = get_db()
+    data = request.get_json(silent=True) or {}
+    message = (data.get("message") or "").strip()
+
+    if not message:
+        return jsonify({"reply": 'Please type a question — e.g. "What have I borrowed?"'})
+
+    reply = get_assistant_reply(db, session["user_id"], session["role"], message)
+    return jsonify({"reply": reply})
+
+
+def get_assistant_reply(db, user_id, role, message):
+    """
+    Lightweight rule-based assistant: matches keywords in the user's message
+    to an intent, then answers using live data from Books / Borrowing.
+    No external AI service is required — this runs entirely on local data.
+    """
+    msg = message.lower()
+
+    # ---- Librarian / admin only intents ----
+    if role in ("librarian", "admin"):
+        if any(k in msg for k in ["overdue", "late book"]):
+            rows = db.execute(
+                """SELECT Books.title, Users.full_name, Borrowing.due_date FROM Borrowing
+                   JOIN Books ON Books.book_id = Borrowing.book_id
+                   JOIN Users ON Users.user_id = Borrowing.user_id
+                   WHERE Borrowing.status != 'returned' AND date(Borrowing.due_date) < date('now')
+                   ORDER BY Borrowing.due_date"""
+            ).fetchall()
+            if not rows:
+                return "No books are currently overdue. The library is all caught up! 🎉"
+            lines = [f'• "{r["title"]}" — borrowed by {r["full_name"]}, was due {r["due_date"][:10]}' for r in rows[:8]]
+            return "Here are the current overdue books:\n" + "\n".join(lines)
+
+        if any(k in msg for k in ["popular", "trend", "most borrowed"]):
+            rows = db.execute(
+                "SELECT title, popularity_score FROM Books ORDER BY popularity_score DESC LIMIT 5"
+            ).fetchall()
+            lines = [f'• "{r["title"]}" — {r["popularity_score"]} borrows' for r in rows]
+            return "Most popular books right now:\n" + "\n".join(lines)
+
+        if any(k in msg for k in ["who has", "currently issued", "active loan", "issued books"]):
+            rows = db.execute(
+                """SELECT Books.title, Users.full_name, Borrowing.due_date FROM Borrowing
+                   JOIN Books ON Books.book_id = Borrowing.book_id
+                   JOIN Users ON Users.user_id = Borrowing.user_id
+                   WHERE Borrowing.status != 'returned' ORDER BY Borrowing.due_date LIMIT 10"""
+            ).fetchall()
+            if not rows:
+                return "There are no active loans right now."
+            lines = [f'• "{r["title"]}" — {r["full_name"]}, due {r["due_date"][:10]}' for r in rows]
+            return "Currently issued books:\n" + "\n".join(lines)
+
+        if any(k in msg for k in ["stat", "total", "how many books", "inventory"]):
+            total_books = db.execute("SELECT COUNT(*) c FROM Books").fetchone()["c"]
+            available = db.execute("SELECT COALESCE(SUM(available_copies),0) c FROM Books").fetchone()["c"]
+            active = db.execute("SELECT COUNT(*) c FROM Borrowing WHERE status != 'returned'").fetchone()["c"]
+            return f"The library has {total_books} titles, {available} copies currently available, and {active} active loans."
+
+    # ---- Shared intents (students + librarians) ----
+    if any(k in msg for k in ["recommend", "suggest", "what should i read", "good book"]):
+        recs = generate_recommendations(db, user_id, top_n=3)
+        if not recs:
+            return "I don't have enough data yet to recommend something — try borrowing a book first!"
+        lines = [f'• "{r["title"]}" by {r["author"]} — {r["reason"]}' for r in recs]
+        return "Here's what I'd recommend for you:\n" + "\n".join(lines)
+
+    if any(k in msg for k in ["my book", "currently borrowed", "what do i have", "borrowed book", "checked out"]):
+        rows = db.execute(
+            """SELECT Books.title, Borrowing.due_date, Borrowing.status FROM Borrowing
+               JOIN Books ON Books.book_id = Borrowing.book_id
+               WHERE Borrowing.user_id = ? AND Borrowing.status != 'returned'
+               ORDER BY Borrowing.due_date""",
+            (user_id,),
+        ).fetchall()
+        if not rows:
+            return "You don't have any books checked out right now."
+        lines = [f'• "{r["title"]}" — due {r["due_date"][:10]} ({r["status"]})' for r in rows]
+        return "Here's what you currently have:\n" + "\n".join(lines)
+
+    if any(k in msg for k in ["history", "returned", "past book", "record"]):
+        rows = db.execute(
+            """SELECT Books.title, Borrowing.return_date, Borrowing.fine_amount FROM Borrowing
+               JOIN Books ON Books.book_id = Borrowing.book_id
+               WHERE Borrowing.user_id = ? AND Borrowing.status = 'returned'
+               ORDER BY Borrowing.return_date DESC LIMIT 8""",
+            (user_id,),
+        ).fetchall()
+        if not rows:
+            return "You don't have any returned books in your history yet."
+        lines = []
+        for r in rows:
+            line = f'• "{r["title"]}" — returned {r["return_date"][:10]}'
+            if r["fine_amount"]:
+                line += f", fine: {r['fine_amount']}"
+            lines.append(line)
+        return "Here's your return history:\n" + "\n".join(lines)
+
+    if any(k in msg for k in ["fine", "owe", "penalty"]):
+        row = db.execute("SELECT COALESCE(SUM(fine_amount),0) c FROM Borrowing WHERE user_id = ?", (user_id,)).fetchone()
+        return f"Your total recorded fines are {row['c']}."
+
+    if any(k in msg for k in ["hello", "hi", "hey"]):
+        return "Hello! I can tell you about your borrowed books, return history, due dates, fines, or recommend a book. What would you like to know?"
+
+    return (
+        "I can help with: book recommendations, your currently borrowed books, your return history, "
+        'due dates, and fines. Try asking something like "recommend a book" or "what have I borrowed".'
+    )
 
 
 # ----------------------------------------------------------------------
